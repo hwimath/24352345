@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>휘매쓰 연산 챌린지!</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+        }
+        #gameContainer {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #title {
+            font-size: 48px;
+            margin-top: 50px;
+            color: #2e8b57;
+        }
+        #difficultySelection, #questionContainer, #gameOverContainer {
+            margin-top: 30px;
+        }
+        .energyBar {
+            width: 100%;
+            background-color: #ddd;
+            height: 30px;
+            position: relative;
+            margin-top: 20px;
+        }
+        .energy {
+            background-color: #76c7c0;
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        .optionButton {
+            display: block;
+            margin: 15px auto;
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #ffffff;
+            border: 2px solid #2e8b57;
+            cursor: pointer;
+            width: 60%;
+            border-radius: 5px;
+        }
+        .optionButton:hover {
+            background-color: #e0ffe0;
+        }
+        #score, #lives, #totalTime {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+        #popup {
+            display: none;
+            position: fixed;
+            background-color: rgba(0,0,0,0.5);
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+        #popupContent {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #popupContent button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="title">휘매쓰 연산 챌린지!</div>
+        <div id="difficultySelection">
+            <h2>난이도를 선택하세요</h2>
+            <button class="optionButton" onclick="startGame('최상')">최상</button>
+            <button class="optionButton" onclick="startGame('상')">상</button>
+            <button class="optionButton" onclick="startGame('중')">중</button>
+            <button class="optionButton" onclick="startGame('하')">하</button>
+        </div>
+        <div id="questionContainer" style="display:none;">
+            <div id="energyBar" class="energyBar">
+                <div id="energy" class="energy"></div>
+            </div>
+            <div id="question" style="font-size:24px; margin-top:20px;"></div>
+            <div id="options"></div>
+            <div id="feedback" style="font-size:20px; margin-top:20px; color:red;"></div>
+            <div id="score">점수: 0</div>
+            <div id="lives">남은 기회: 3</div>
+            <div id="totalTime">총 게임 시간: 0초</div>
+        </div>
+        <div id="gameOverContainer" style="display:none;">
+            <h2 id="gameOverMessage"></h2>
+            <button class="optionButton" onclick="restartGame()">다시 시작</button>
+        </div>
+    </div>
+    <div id="popup">
+        <div id="popupContent">
+            <h2 id="popupMessage"></h2>
+            <button onclick="closePopup()">닫기</button>
+        </div>
+    </div>
+    <script>
+        let questions = [
+            // 1
+            {
+                type: '소수곱셈',
+                question: '0.3 × 0.5를 계산하세요.',
+                answer: '0.15',
+                options: ['0.15', '1.5', '0.03', '0.05']
+            },
+            // 2
+            {
+                type: '소수곱셈',
+                question: '0.01 × 2.7을 계산하세요.',
+                answer: '0.027',
+                options: ['0.027', '0.27', '0.0027', '0.072']
+            },
+            // 3
+            {
+                type: '소수곱셈',
+                question: '0.4 × 0.2를 계산하세요.',
+                answer: '0.08',
+                options: ['0.08', '0.8', '0.008', '0.02']
+            },
+            // 4
+            {
+                type: '소수곱셈',
+                question: '0.6 × 0.9를 계산하세요.',
+                answer: '0.54',
+                options: ['0.54', '5.4', '0.063', '0.6']
+            },
+            // 5
+            {
+                type: '소수곱셈',
+                question: '0.05 × 0.7를 계산하세요.',
+                answer: '0.035',
+                options: ['0.035', '0.35', '0.0035', '0.007']
+            },
+            // 6
+            {
+                type: '소수곱셈',
+                question: '0.8 × 0.3를 계산하세요.',
+                answer: '0.24',
+                options: ['0.24', '2.4', '0.024', '0.14']
+            },
+            // 7
+            {
+                type: '소수곱셈',
+                question: '0.12 × 0.5를 계산하세요.',
+                answer: '0.06',
+                options: ['0.06', '0.6', '0.012', '0.62']
+            },
+            // 8
+            {
+                type: '소수곱셈',
+                question: '0.25 × 0.4를 계산하세요.',
+                answer: '0.1',
+                options: ['0.1', '1', '0.01', '0.14']
+            },
+            // 9
+            {
+                type: '소수곱셈',
+                question: '0.07 × 0.6를 계산하세요.',
+                answer: '0.042',
+                options: ['0.042', '0.42', '0.0042', '0.012']
+            },
+            // 10
+            {
+                type: '소수곱셈',
+                question: '0.9 × 0.9를 계산하세요.',
+                answer: '0.81',
+                options: ['0.81', '8.1', '0.18', '0.09']
+            },
+            // 11
+            {
+                type: '소수곱셈',
+                question: '0.03 × 0.2를 계산하세요.',
+                answer: '0.006',
+                options: ['0.006', '0.06', '0.0006', '0.6']
+            },
+            // 12
+            {
+                type: '소수곱셈',
+                question: '0.04 × 0.25를 계산하세요.',
+                answer: '0.01',
+                options: ['0.01', '0.1', '0.001', '0.14']
+            },
+            // 13
+            {
+                type: '소수곱셈',
+                question: '0.5 × 0.5를 계산하세요.',
+                answer: '0.25',
+                options: ['0.25', '2.5', '0.052', '0.1']
+            },
+            // 14
+            {
+                type: '소수곱셈',
+                question: '0.08 × 0.7를 계산하세요.',
+                answer: '0.056',
+                options: ['0.056', '0.56', '0.0056', '0.015']
+            },
+            // 15
+            {
+                type: '소수곱셈',
+                question: '0.6 × 0.6를 계산하세요.',
+                answer: '0.36',
+                options: ['0.36', '3.6', '0.063', '0.12']
+            },
+            // 16
+            {
+                type: '소수곱셈',
+                question: '0.05 × 0.05를 계산하세요.',
+                answer: '0.0025',
+                options: ['0.0025', '0.025', '0.00025', '0.05']
+            },
+            // 17
+            {
+                type: '소수곱셈',
+                question: '0.2 × 0.9를 계산하세요.',
+                answer: '0.18',
+                options: ['0.18', '1.8', '0.81', '0.09']
+            },
+            // 18
+            {
+                type: '소수곱셈',
+                question: '0.15 × 0.4를 계산하세요.',
+                answer: '0.06',
+                options: ['0.06', '0.6', '0.016', '0.15']
+            },
+            // 19
+            {
+                type: '소수곱셈',
+                question: '0.07 × 0.07를 계산하세요.',
+                answer: '0.0049',
+                options: ['0.0049', '0.049', '0.00049', '0.014']
+            },
+            // 20
+            {
+                type: '소수곱셈',
+                question: '0.3 × 0.8를 계산하세요.',
+                answer: '0.24',
+                options: ['0.24', '2.4', '0.032', '0.11']
+            },
+            // 21
+            {
+                type: '소수곱셈',
+                question: '0.04 × 0.04를 계산하세요.',
+                answer: '0.0016',
+                options: ['0.0016', '0.016', '0.00016', '0.08']
+            },
+            // 22
+            {
+                type: '소수곱셈',
+                question: '0.9 × 0.2를 계산하세요.',
+                answer: '0.18',
+                options: ['0.18', '1.8', '0.81', '0.09']
+            },
+            // 23
+            {
+                type: '소수곱셈',
+                question: '0.11 × 0.5를 계산하세요.',
+                answer: '0.055',
+                options: ['0.055', '0.55', '0.0055', '0.015']
+            },
+            // 24
+            {
+                type: '소수곱셈',
+                question: '0.06 × 0.3를 계산하세요.',
+                answer: '0.018',
+                options: ['0.018', '0.18', '0.0018', '0.9']
+            },
+            // 25
+            {
+                type: '소수곱셈',
+                question: '0.8 × 0.02를 계산하세요.',
+                answer: '0.016',
+                options: ['0.016', '0.16', '0.0016', '0.12']
+            },
+            // 26
+            {
+                type: '소수곱셈',
+                question: '0.5 × 0.12를 계산하세요.',
+                answer: '0.06',
+                options: ['0.06', '0.6', '0.012', '0.62']
+            },
+            // 27
+            {
+                type: '소수곱셈',
+                question: '0.4 × 0.04를 계산하세요.',
+                answer: '0.016',
+                options: ['0.016', '0.16', '0.0016', '0.08']
+            },
+            // 28
+            {
+                type: '소수곱셈',
+                question: '0.03 × 0.03를 계산하세요.',
+                answer: '0.0009',
+                options: ['0.0009', '0.009', '0.00009', '0.09']
+            },
+            // 29
+            {
+                type: '소수곱셈',
+                question: '0.25 × 0.08를 계산하세요.',
+                answer: '0.02',
+                options: ['0.02', '0.2', '0.002', '0.14']
+            },
+            // 30
+            {
+                type: '소수곱셈',
+                question: '0.07 × 0.5를 계산하세요.',
+                answer: '0.035',
+                options: ['0.035', '0.35', '0.0035', '0.07']
+            },
+            // 31
+            {
+                type: '소수곱셈',
+                question: '0.09 × 0.9를 계산하세요.',
+                answer: '0.081',
+                options: ['0.081', '0.81', '0.0081', '0.18']
+            },
+            // 32
+            {
+                type: '소수곱셈',
+                question: '0.2 × 0.2를 계산하세요.',
+                answer: '0.04',
+                options: ['0.04', '0.4', '0.004', '0.08']
+            },
+            // 33
+            {
+                type: '소수곱셈',
+                question: '0.5 × 0.06를 계산하세요.',
+                answer: '0.03',
+                options: ['0.03', '0.3', '0.003', '0.15']
+            },
+            // 34
+            {
+                type: '소수곱셈',
+                question: '0.08 × 0.08를 계산하세요.',
+                answer: '0.0064',
+                options: ['0.0064', '0.064', '0.00064', '0.16']
+            },
+            // 35
+            {
+                type: '소수곱셈',
+                question: '0.6 × 0.07를 계산하세요.',
+                answer: '0.042',
+                options: ['0.042', '0.42', '0.0042', '0.12']
+            },
+            // 36
+            {
+                type: '소수곱셈',
+                question: '0.04 × 0.6를 계산하세요.',
+                answer: '0.024',
+                options: ['0.024', '0.24', '0.0024', '0.18']
+            },
+            // 37
+            {
+                type: '소수곱셈',
+                question: '0.01 × 0.5를 계산하세요.',
+                answer: '0.005',
+                options: ['0.005', '0.05', '0.0005', '0.15']
+            },
+            // 38
+            {
+                type: '소수곱셈',
+                question: '0.9 × 0.05를 계산하세요.',
+                answer: '0.045',
+                options: ['0.045', '0.45', '0.0045', '0.09']
+            },
+            // 39
+            {
+                type: '소수곱셈',
+                question: '0.02 × 0.02를 계산하세요.',
+                answer: '0.0004',
+                options: ['0.0004', '0.004', '0.00004', '0.04']
+            },
+            // 40
+            {
+                type: '소수곱셈',
+                question: '0.15 × 0.2를 계산하세요.',
+                answer: '0.03',
+                options: ['0.03', '0.3', '0.003', '0.12']
+            },
+            // 41
+            {
+                type: '소수곱셈',
+                question: '0.06 × 0.06를 계산하세요.',
+                answer: '0.0036',
+                options: ['0.0036', '0.036', '0.00036', '0.12']
+            },
+            // 42
+            {
+                type: '소수곱셈',
+                question: '0.8 × 0.05를 계산하세요.',
+                answer: '0.04',
+                options: ['0.04', '0.4', '0.004', '0.08']
+            },
+            // 43
+            {
+                type: '소수곱셈',
+                question: '0.03 × 0.5를 계산하세요.',
+                answer: '0.015',
+                options: ['0.015', '0.15', '0.0015', '0.03']
+            },
+            // 44
+            {
+                type: '소수곱셈',
+                question: '0.05 × 0.05를 계산하세요.',
+                answer: '0.0025',
+                options: ['0.0025', '0.025', '0.00025', '0.05']
+            },
+            // 45
+            {
+                type: '소수곱셈',
+                question: '0.4 × 0.3를 계산하세요.',
+                answer: '0.12',
+                options: ['0.12', '1.2', '0.012', '0.7']
+            },
+            // 46
+            {
+                type: '소수곱셈',
+                question: '0.07 × 0.9를 계산하세요.',
+                answer: '0.063',
+                options: ['0.063', '0.63', '0.0063', '0.16']
+            },
+            // 47
+            {
+                type: '소수곱셈',
+                question: '0.02 × 0.7를 계산하세요.',
+                answer: '0.014',
+                options: ['0.014', '0.14', '0.0014', '0.12']
+            },
+            // 48
+            {
+                type: '소수곱셈',
+                question: '0.06 × 0.5를 계산하세요.',
+                answer: '0.03',
+                options: ['0.03', '0.3', '0.003', '0.15']
+            },
+            // 49
+            {
+                type: '소수곱셈',
+                question: '0.08 × 0.4를 계산하세요.',
+                answer: '0.032',
+                options: ['0.032', '0.32', '0.0032', '0.12']
+            },
+            // 50
+            {
+                type: '소수곱셈',
+                question: '0.09 × 0.5를 계산하세요.',
+                answer: '0.045',
+                options: ['0.045', '0.45', '0.0045', '0.09']
+            }
+        ];
+
+        let currentQuestion = {};
+        let score = 0;
+        let lives = 3;
+        let difficulty = '';
+        let timeLimit = 0;
+        let energyInterval;
+        let totalTime = 0;
+        let totalTimeInterval;
+        let energyPercentage = 100;
+        let decreaseRate = 1; // 매 라운드마다 증가
+        let answeredQuestions = [];
+
+        function startGame(selectedDifficulty) {
+            difficulty = selectedDifficulty;
+            switch(difficulty) {
+                case '최상':
+                    timeLimit = 20000; // 20초
+                    scoreIncrement = 20;
+                    break;
+                case '상':
+                    timeLimit = 30000; // 30초
+                    scoreIncrement = 15;
+                    break;
+                case '중':
+                    timeLimit = 40000; // 40초
+                    scoreIncrement = 13;
+                    break;
+                case '하':
+                    timeLimit = Infinity; // 시간 제한 없음
+                    scoreIncrement = 10;
+                    break;
+            }
+            document.getElementById('difficultySelection').style.display = 'none';
+            document.getElementById('questionContainer').style.display = 'block';
+            totalTimeInterval = setInterval(() => {
+                totalTime++;
+                document.getElementById('totalTime').innerText = '총 게임 시간: ' + totalTime + '초';
+            }, 1000);
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (lives <= 0) {
+                gameOver();
+                return;
+            }
+
+            // 시간 제한 설정
+            energyPercentage = 100;
+            if (difficulty !== '하') {
+                clearInterval(energyInterval);
+                energyInterval = setInterval(() => {
+                    energyPercentage -= (100 / (timeLimit / decreaseRate / 100));
+                    if (energyPercentage <= 0) {
+                        energyPercentage = 0;
+                        clearInterval(energyInterval);
+                        lives--;
+                        document.getElementById('lives').innerText = '남은 기회: ' + lives;
+                        document.getElementById('feedback').innerText = '시간 초과! 다음 문제로 넘어갑니다.';
+                        setTimeout(() => {
+                            document.getElementById('feedback').innerText = '';
+                            nextQuestion();
+                        }, 2000);
+                        return;
+                    }
+                    document.getElementById('energy').style.width = energyPercentage + '%';
+                }, 100);
+            } else {
+                document.getElementById('energyBar').style.display = 'none';
+            }
+
+            // 문제 선택
+            if (answeredQuestions.length === questions.length) {
+                answeredQuestions = []; // 문제를 모두 풀면 다시 초기화하여 반복되게 합니다.
+            }
+            do {
+                currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+            } while (answeredQuestions.includes(currentQuestion));
+
+            answeredQuestions.push(currentQuestion);
+
+            // 문제 표시
+            document.getElementById('question').innerText = currentQuestion.question;
+            // 선택지 섞기
+            let options = [...currentQuestion.options];
+            options = [...new Set(options)]; // 중복 제거
+            options.sort(() => Math.random() - 0.5);
+
+            // 선택지 표시
+            let optionsHtml = '';
+            options.forEach((option, index) => {
+                optionsHtml += `<button class="optionButton" onclick="checkAnswer('${option}')">${option}</button>`;
+            });
+            document.getElementById('options').innerHTML = optionsHtml;
+        }
+
+        function checkAnswer(selectedOption) {
+            clearInterval(energyInterval);
+            if (selectedOption === currentQuestion.answer) {
+                score += scoreIncrement;
+                document.getElementById('score').innerText = '점수: ' + score;
+                document.getElementById('feedback').innerText = '정답입니다!';
+                randomPopup();
+            } else {
+                lives--;
+                document.getElementById('lives').innerText = '남은 기회: ' + lives;
+                document.getElementById('feedback').innerText = `오답입니다. 정답은 "${currentQuestion.answer}" 입니다.`;
+            }
+            setTimeout(() => {
+                document.getElementById('feedback').innerText = '';
+                nextQuestion();
+            }, 2000);
+        }
+
+        function gameOver() {
+            clearInterval(totalTimeInterval);
+            document.getElementById('questionContainer').style.display = 'none';
+            document.getElementById('gameOverContainer').style.display = 'block';
+            document.getElementById('gameOverMessage').innerText = '게임 종료! 최종 점수: ' + score + '점';
+        }
+
+        function restartGame() {
+            score = 0;
+            lives = 3;
+            totalTime = 0;
+            answeredQuestions = [];
+            document.getElementById('score').innerText = '점수: ' + score;
+            document.getElementById('lives').innerText = '남은 기회: ' + lives;
+            document.getElementById('totalTime').innerText = '총 게임 시간: ' + totalTime + '초';
+            document.getElementById('gameOverContainer').style.display = 'none';
+            document.getElementById('difficultySelection').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        function randomPopup() {
+            let randomNumber = Math.random();
+            if (randomNumber < 0.0001) { // 1/10000 확률
+                showPopup('축하합니다! 5000원 상품권에 당첨되셨습니다!');
+            } else if (randomNumber < 0.001) { // 1/1000 확률
+                showPopup('축하합니다! 3000원 상품권에 당첨되셨습니다!');
+            } else if (randomNumber < 0.002) { // 1/500 확률
+                showPopup('축하합니다! 1회 면제권을 획득하셨습니다!');
+                lives++;
+                document.getElementById('lives').innerText = '남은 기회: ' + lives;
+            }
+        }
+
+        function showPopup(message) {
+            document.getElementById('popupMessage').innerText = message;
+            document.getElementById('popup').style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
